@@ -26,12 +26,15 @@ make
 %make_install
 %__install -d $RPM_BUILD_ROOT/etc/init.d
 %__install -d $RPM_BUILD_ROOT/etc/sysconfig
+%__install -d $RPM_BUILD_ROOT/usr/local/etc/captagent
 %__install init/centos/captagent.init $RPM_BUILD_ROOT/etc/init.d/captagent
 %__install init/centos/captagent.sysconfig $RPM_BUILD_ROOT/etc/sysconfig/captagent
+%__install conf/captagent.xml $RPM_BUILD_ROOT/usr/local/etc/captagent/captagent.xml
 
 %files
 /etc/init.d/captagent
 /etc/sysconfig/captagent
+/usr/local/etc/captagent/captagent.xml
 /usr/local/include/capt_cli.h
 /usr/local/include/core_hep.h
 /usr/local/include/ipreasm.h
