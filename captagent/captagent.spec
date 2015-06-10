@@ -33,8 +33,8 @@ make
 
 %files
 /etc/init.d/captagent
-/etc/sysconfig/captagent
-/usr/local/etc/captagent/captagent.xml
+%config /etc/sysconfig/captagent
+%config /usr/local/etc/captagent/captagent.xml
 /usr/local/include/capt_cli.h
 /usr/local/include/core_hep.h
 /usr/local/include/ipreasm.h
