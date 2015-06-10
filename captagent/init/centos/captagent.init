@@ -22,6 +22,8 @@
 
 cap=/usr/local/bin/captagent
 prog=captagent
+pidfile=/var/run/$prog.pid
+lockfile=/var/lock/$prog
 RETVAL=0
 
 [ -z "$CONFIG" ]  && CONFIG=/usr/local/etc/captagent/captagent.xml
@@ -32,63 +34,63 @@ OPTIONS="-f $CONFIG"
 [ -f /etc/sysconfig/$prog ] && . /etc/sysconfig/$prog
 
 start() {
-  if [ -e /var/run/captagent.pid ]; then
-        echo "[FAILED] Captagent is already running with PID: `cat /var/run/captagent.pid`"
-  else  
-        echo -n $"Starting $prog: "
-         # there is something at end of this output which is needed to
-         # report proper [ OK ] status in CentOS scripts
-         $cap $OPTIONS && success || failure
-         RETVAL=$?
-         echo
-         [ $RETVAL = 0 ] && touch /var/lock/subsys/$prog
-  fi       
-}
-
-stop() {
-	echo -n $"Stopping $prog: "
-	killproc $cap
-	RETVAL=$?
-	echo
-	[ $RETVAL = 0 ] && rm -f /var/lock/subsys/$prog /var/run/$prog.pid
-}
-
-status() {
-  if [ -e /var/run/captagent.pid ]; then
-             echo "[OK] Captagent is running with PID: `cat /var/run/captagent.pid`"
+  if [ -e $pidfile ]; then
+    echo "[FAILED] Captagent is already running with PID: $(cat $pidfile)"
   else
-             echo "[FAILED] /var/run/captagent.pid does not exist"
-             RETVAL=1
-  fi   
-	return $RETVAL
+    echo -n $"Starting $prog: "
+    # there is something at end of this output which is needed to
+    # report proper [ OK ] status in CentOS scripts
+    { $cap $OPTIONS && success; } || failure
+      RETVAL=$?
+      echo
+      [ $RETVAL = 0 ] && touch $lockfile
+  fi
 }
 
+  stop() {
+    echo -n $"Stopping $prog: "
+    killproc $cap
+    RETVAL=$?
+    echo
+    [ $RETVAL = 0 ] && rm -f $lockfile $pidfile
+  }
 
-# See how we were called.
-case "$1" in
-	start)
-		start
-		;;
-	stop)
-		stop
-		;;
-	status)
-		status
-		;;
-	restart)
-		stop
-		start
-		;;
-	condrestart)
-		if [ -f /var/run/$prog.pid ] ; then
-			stop
-			start
-		fi
-		;;
-	*)
-		echo $"Usage: $prog {start|stop|restart|condrestart|status|help}"
-		exit 1
-esac
+  status() {
+    if [ -e $pidfile ]; then
+      echo "[OK] Captagent is running with PID: $(cat $pidfile)"
+    else
+      echo "[FAILED] $pidfile does not exist"
+      RETVAL=1
+    fi
+    return $RETVAL
+  }
 
-exit $RETVAL
+
+  # See how we were called.
+  case "$1" in
+    start)
+      start
+      ;;
+    stop)
+      stop
+      ;;
+    status)
+      status
+      ;;
+    restart)
+      stop
+      start
+      ;;
+    condrestart)
+      if [ -f $pidfile ] ; then
+        stop
+        start
+      fi
+      ;;
+    *)
+      echo "Usage: $prog {start|stop|restart|condrestart|status|help}"
+      exit 1
+  esac
+
+  exit $RETVAL
 
