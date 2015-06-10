@@ -41,56 +41,55 @@ start() {
     # there is something at end of this output which is needed to
     # report proper [ OK ] status in CentOS scripts
     { $cap $OPTIONS && success; } || failure
-      RETVAL=$?
-      echo
-      [ $RETVAL = 0 ] && touch $lockfile
+    RETVAL=$?
+    echo
+    [ $RETVAL = 0 ] && touch $lockfile
   fi
 }
 
-  stop() {
-    echo -n $"Stopping $prog: "
-    killproc $cap
-    RETVAL=$?
-    echo
-    [ $RETVAL = 0 ] && rm -f $lockfile $pidfile
-  }
+stop() {
+  echo -n $"Stopping $prog: "
+  killproc $cap
+  RETVAL=$?
+  echo
+  [ $RETVAL = 0 ] && rm -f $lockfile $pidfile
+}
 
-  status() {
-    if [ -e $pidfile ]; then
-      echo "[OK] Captagent is running with PID: $(cat $pidfile)"
-    else
-      echo "[FAILED] $pidfile does not exist"
-      RETVAL=1
+status() {
+  if [ -e $pidfile ]; then
+    echo "[OK] Captagent is running with PID: $(cat $pidfile)"
+  else
+    echo "[FAILED] $pidfile does not exist"
+    RETVAL=1
+  fi
+  return $RETVAL
+}
+
+
+# See how we were called.
+case "$1" in
+  start)
+    start
+    ;;
+  stop)
+    stop
+    ;;
+  status)
+    status
+    ;;
+  restart)
+    stop
+    start
+    ;;
+  condrestart)
+    if [ -f $pidfile ] ; then
+      stop
+      start
     fi
-    return $RETVAL
-  }
+    ;;
+  *)
+    echo "Usage: $prog {start|stop|restart|condrestart|status|help}"
+    exit 1
+esac
 
-
-  # See how we were called.
-  case "$1" in
-    start)
-      start
-      ;;
-    stop)
-      stop
-      ;;
-    status)
-      status
-      ;;
-    restart)
-      stop
-      start
-      ;;
-    condrestart)
-      if [ -f $pidfile ] ; then
-        stop
-        start
-      fi
-      ;;
-    *)
-      echo "Usage: $prog {start|stop|restart|condrestart|status|help}"
-      exit 1
-  esac
-
-  exit $RETVAL
-
+exit $RETVAL
